@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.projet.collection.*
 
@@ -27,8 +28,8 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CuisineAssistantApp() {
-    var recetteName by remember { mutableStateOf(TextFieldValue("")) }
-    var ingredientName by remember { mutableStateOf(TextFieldValue("")) }
+    val recetteName by remember { mutableStateOf(TextFieldValue("")) }
+    val ingredientName by remember { mutableStateOf(TextFieldValue("")) }
     var recetteList by remember { mutableStateOf(GestionnaireRecettes.afficherRecettes()) }
     val context = LocalContext.current // Contexte pour afficher le Toast
 
@@ -38,7 +39,9 @@ fun CuisineAssistantApp() {
             TopAppBar(title = { Text("🍳 Assistant de Cuisine") })
         },
         content = {
-            Column(modifier = Modifier.padding(16.dp).padding(top = 64.dp)) { // Ajout d'un padding supplémentaire pour éviter la superposition avec la TopAppBar
+            Column(
+                modifier = Modifier.padding(16.dp).padding(top = 64.dp)
+            ) { // Ajout d'un padding supplémentaire pour éviter la superposition avec la TopAppBar
                 // Interface avec boutons pour les différentes actions
                 Button(onClick = {
                     // Ajouter une recette
@@ -129,4 +132,10 @@ fun CuisineAssistantApp() {
 // Fonction pour afficher un Toast
 fun showToast(context: android.content.Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewCuisineAssistantApp() {
+    CuisineAssistantApp()
 }
