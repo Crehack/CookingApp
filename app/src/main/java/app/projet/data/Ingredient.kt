@@ -1,4 +1,4 @@
-package app.projet.collection
+package app.projet.data
 
 import kotlinx.serialization.Serializable
 
