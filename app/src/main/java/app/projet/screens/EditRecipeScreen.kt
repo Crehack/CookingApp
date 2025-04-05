@@ -1,3 +1,5 @@
+package app.projet.screens
+
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,25 +14,27 @@ import app.projet.models.Recette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddRecipeScreen(navController: NavController , context: Context) {
-    var recipeName by remember { mutableStateOf("") }
-    var recetteInstructions by remember { mutableStateOf("") }
-    var recetteCategorie by remember { mutableStateOf("") }
-    var ingredientsList by remember { mutableStateOf(mutableListOf<Ingredient>()) }
+fun EditRecipeScreen(recipeName: String, navController: NavController, context: Context) {
+    val recette = GestionnaireRecettes.recettes.find { it.nom == recipeName }
+    var recipeNameState by remember { mutableStateOf(recette?.nom ?: "") }
+    var recetteInstructions by remember { mutableStateOf(recette?.instructions ?: "") }
+    var recetteCategorie by remember { mutableStateOf(recette?.categorie ?: "") }
+    var ingredientsList by remember { mutableStateOf(recette?.ingredients ?: mutableListOf<Ingredient>()) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Formulaire pour ajouter un ingrédient
-    var ingredientName by remember { mutableStateOf("") }
-    var ingredientQuantity by remember { mutableStateOf("") }
-    var ingredientUnit by remember { mutableStateOf("") }
+    // Si la recette n'existe pas
+    if (recette == null) {
+        Text("Recette introuvable.")
+        return
+    }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Ajouter une recette") }) }
+        topBar = { TopAppBar(title = { Text("Modifier la recette") }) }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
             TextField(
-                value = recipeName,
-                onValueChange = { recipeName = it },
+                value = recipeNameState,
+                onValueChange = { recipeNameState = it },
                 label = { Text("Nom de la recette") }
             )
 
@@ -54,8 +58,12 @@ fun AddRecipeScreen(navController: NavController , context: Context) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Ajouter un ingrédient
+            // Formulaire pour ajouter un ingrédient
             Text("Ajouter un ingrédient", style = MaterialTheme.typography.titleMedium)
+
+            var ingredientName by remember { mutableStateOf("") }
+            var ingredientQuantity by remember { mutableStateOf("") }
+            var ingredientUnit by remember { mutableStateOf("") }
 
             TextField(
                 value = ingredientName,
@@ -65,6 +73,7 @@ fun AddRecipeScreen(navController: NavController , context: Context) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Champ pour la quantité avec un clavier numérique
             TextField(
                 value = ingredientQuantity,
                 onValueChange = { ingredientQuantity = it },
@@ -89,12 +98,15 @@ fun AddRecipeScreen(navController: NavController , context: Context) {
             Button(onClick = {
                 if (ingredientName.isNotEmpty() && ingredientQuantity.isNotEmpty() && ingredientUnit.isNotEmpty()) {
                     try {
-                        val quantity = ingredientQuantity.toFloat()
-                        ingredientsList.add(Ingredient(ingredientName, quantity, ingredientUnit))
+                        val quantity = ingredientQuantity.toFloat() // Conversion en float avec gestion d'erreur
+                        // Crée une nouvelle liste avec l'ingrédient ajouté
+                        ingredientsList = ingredientsList.toMutableList().apply {
+                            add(Ingredient(ingredientName, quantity, ingredientUnit))
+                        }
                         ingredientName = ""
                         ingredientQuantity = ""
                         ingredientUnit = ""
-                        errorMessage = "" // Clear error message
+                        errorMessage = "" // Efface le message d'erreur
                     } catch (e: NumberFormatException) {
                         errorMessage = "La quantité doit être un nombre valide"
                     }
@@ -117,23 +129,22 @@ fun AddRecipeScreen(navController: NavController , context: Context) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(onClick = {
-                if (recipeName.isNotEmpty() && recetteInstructions.isNotEmpty() && recetteCategorie.isNotEmpty() && ingredientsList.isNotEmpty()) {
-                    val newRecette = Recette(
-                        nom = recipeName,
+                if (recipeNameState.isNotEmpty() && recetteInstructions.isNotEmpty() && recetteCategorie.isNotEmpty() && ingredientsList.isNotEmpty()) {
+                    val updatedRecette = Recette(
+                        nom = recipeNameState,
                         ingredients = ingredientsList,
                         instructions = recetteInstructions,
                         categorie = recetteCategorie
                     )
-
-                    // Ajouter la recette dans GestionnaireRecettes et sauvegarder
-                    GestionnaireRecettes.ajouterRecette(context , newRecette)
-                    GestionnaireRecettes.sauvegarderRecettes(context) // Passer context pour sauvegarder
-                    navController.popBackStack()  // Retourner à la page précédente
+                    // Mise à jour de la recette dans GestionnaireRecettes
+                    GestionnaireRecettes.recettes.removeIf { it.nom == recette.nom }
+                    GestionnaireRecettes.ajouterRecette(context , updatedRecette)
+                    navController.popBackStack()  // Retour à la page d'accueil
                 } else {
                     errorMessage = "Tous les champs de la recette doivent être remplis"
                 }
             }) {
-                Text("Sauvegarder la recette")
+                Text("Sauvegarder les modifications")
             }
         }
     }
